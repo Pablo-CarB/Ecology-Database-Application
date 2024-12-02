@@ -1,19 +1,22 @@
 package app;
 
-import app.controller.Controller;
-import app.controller.ControllerImpl;
-import app.model.Model;
-import app.model.ModelImpl;
-import app.view.CLIView;
-import app.view.View;
+import app.controller.LoginController;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
-public class Main {
+public class Main extends Application {
   public static void main(String...args){
+    launch();
+  }
 
-    Model model = new ModelImpl();
-    View view = new CLIView();
-
-    Controller controller = new ControllerImpl(model,view);
-    controller.execute();
+  @Override
+  public void start(Stage stage) throws Exception {
+    FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("controller/Login.fxml"));
+    Scene scene = new Scene(fxmlLoader.load());
+    stage.setTitle("Login Window");
+    stage.setScene(scene);
+    stage.show();
   }
 }

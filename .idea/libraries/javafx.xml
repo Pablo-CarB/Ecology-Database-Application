@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="javafx">
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES>
+      <root url="file:///Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/javafx-sdk-14.0.2.1/lib/src/javafx.base" />
+      <root url="file:///Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/javafx-sdk-14.0.2.1/lib/src/javafx.controls" />
+      <root url="file:///Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/javafx-sdk-14.0.2.1/lib/src/javafx.fxml" />
+      <root url="file:///Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/javafx-sdk-14.0.2.1/lib/src/javafx.graphics" />
+      <root url="file:///Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/javafx-sdk-14.0.2.1/lib/src/javafx.media" />
+      <root url="file:///Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/javafx-sdk-14.0.2.1/lib/src/javafx.swing" />
+      <root url="file:///Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/javafx-sdk-14.0.2.1/lib/src/javafx.web" />
+    </SOURCES>
+  </library>
+</component>
