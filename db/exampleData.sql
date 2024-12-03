@@ -35,6 +35,66 @@ INSERT INTO Genus (genus_name, family_name) VALUES ('Panthera', 'Felidae');
 INSERT INTO Genus (genus_name, family_name) VALUES ('Passer', 'Fringillidae'); 
 INSERT INTO Genus (genus_name, family_name) VALUES ('Vipera', 'Viperidae'); 
 
+-- Insert Genera
+INSERT INTO Genus (genus_name, family_name) VALUES 
+('Malus', 'Rosaceae'),  
+('Panthera', 'Felidae'), 
+('Passer', 'Fringillidae'), 
+('Vipera', 'Viperidae'); 
+
+/*
+BEGIN biome and region edits
+*/
+
+-- Insert Biomes (NASA's Seven Biomes)
+INSERT INTO Biome(biome_name)
+VALUES 
+    ('Tundra'),
+    ('Coniferous Forest'),
+    ('Temperate Deciduous Forest'),
+    ('Rainforest'),
+    ('Grassland'),
+    ('Shrubland'),
+    ('Desert');
+
+-- Insert Regions (linked to Biomes)
+INSERT INTO Region(region_name, longitude, latitude, biome_name)
+VALUES
+    ('Arctic Tundra', 135.0, 71.0, 'Tundra'), -- Arctic region near Russia 
+    ('East Siberian Taiga', 135.0, 60.0, 'Coniferous Forest'), -- Eastern Russia taiga region
+    ('Appalachian Mountains', -81.0, 37.0, 'Temperate Deciduous Forest'), -- Appalachians in Eastern USA
+    ('Amazon Rainforest', -63.0, -3.0, 'Rainforest'), -- Central Amazon, Brazil
+    ('Great Plains', -100.0, 39.0, 'Grassland'), -- Central USA plains
+    ('Mediterranean Shrubland', 10.0, 38.0, 'Shrubland'), -- Mediterranean region near Italy/Spain
+    ('Sahara Desert', 13.0, 40.0, 'Desert'); -- Sahara near Niger/Chad border
+
+-- Link Species to Biomes and Regions
+INSERT INTO SpeciesRegionBiome(genus_name, specific_name, longitude, latitude, biome_name)
+VALUES
+    -- Plants
+    ('Malus', 'domestica', -81.0, 37.0, 'Temperate Deciduous Forest'), -- Apple in Appalachian Mountains
+    ('Pinus', 'sylvestris', 135.0, 60.0, 'Coniferous Forest'), -- Scots Pine in East Siberian Taiga
+
+    -- Herbivores
+    ('Cervus', 'elaphus', -81.0, 37.0, 'Temperate Deciduous Forest'), -- Red Deer in East Siberian Taiga
+    ('Bos', 'taurus', -100.0, 39.0, 'Grassland'), -- Cow in Great Plains
+
+    -- Carnivores
+    ('Panthera', 'leo', 13.0, 40.0, 'Desert'), -- Lion in Sahara Desert
+    ('Vipera', 'berus', 135.0, 60.0, 'Coniferous Forest'), -- European Adder in East Siberian Taiga
+
+    -- Omnivores
+    ('Homo', 'sapiens', 135.0, 71.0, 'Tundra'), -- Humans in Artic Tundra
+    ('Passer', 'domesticus', -100.0, 39.0, 'Grassland'), -- House Sparrow in Great Plains
+
+    -- Insects
+    ('Bombus', 'terrestris', 10.0, 38.0, 'Shrubland'), -- Bumblebee in Mediterranean Shrubland
+    ('Lucilia', 'sericata', -63.0, -3.0, 'Rainforest'); -- Green Bottle Fly in Amazong Rainforest
+
+/*
+END biome and region edits
+*/
+
 INSERT INTO DietaryPattern(diet_name)
 VALUES ("carnivore"),("herbivore"),("omnivore"),("insectivore"),("piscivore"),("fungivore"),("bacterivore"),("algivore"),("scavenger"),("nectivores"),("saprotroph"),("parasite"),('photoautotroph');
 
