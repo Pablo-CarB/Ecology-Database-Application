@@ -49,10 +49,10 @@
             </VBox>
             <VBox prefHeight="128.0" prefWidth="100.0">
                <children>
-                  <Button fx:id="submitLogin" defaultButton="true" mnemonicParsing="false" onAction="#handleLoginAction" prefHeight="26.0" prefWidth="94.0" text="Submit Info" />
+                  <Button fx:id="submitLogin" defaultButton="true" mnemonicParsing="false" onAction="#handleLoginAction" prefHeight="58.0" prefWidth="94.0" text="Login" />
                </children>
                <padding>
-                  <Insets top="35.0" />
+                  <Insets bottom="20.0" top="10.0" />
                </padding>
             </VBox>
          </children>

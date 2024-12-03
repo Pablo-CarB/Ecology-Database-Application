@@ -1,15 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<SplitPane fx:id="splitPane" dividerPositions="0.5" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.controller.TreeController">
+<SplitPane fx:id="splitPane" dividerPositions="0.5062814070351759" orientation="VERTICAL"
+           prefHeight="400.0" prefWidth="792.0" xmlns="http://javafx.com/javafx/23.0.1"
+           xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.controller.TreeController">
     <items>
-        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+        <AnchorPane minHeight="0.0" minWidth="0.0">
             <children>
-                <TreeView fx:id="treeOfLife" prefHeight="200.0" prefWidth="598.0" />
-            </children></AnchorPane>
-        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" />
+                <TreeView fx:id="treeOfLife" prefWidth="790.0" />
+            </children>
+        </AnchorPane>
+        <AnchorPane minHeight="0.0" minWidth="0.0">
+            <children>
+                <TableView>
+                    <columns>
+                        <TableColumn prefWidth="75.0" text="Genus" />
+                        <TableColumn prefWidth="93.0" text="Specific Name" />
+                        <TableColumn prefWidth="113.0" text="Common Name" />
+                        <TableColumn prefWidth="113.0" text="Feeding Strategy" />
+                        <TableColumn minWidth="9.0" prefWidth="94.0" text="Dietary Pattern" />
+                        <TableColumn minWidth="0.0" prefWidth="98.0" text="Year Described" />
+                        <TableColumn minWidth="5.0" prefWidth="75.0" text="Gregarious" />
+                        <TableColumn prefWidth="133.0" text="Conservation Status" />
+                    </columns>
+                </TableView>
+            </children>
+        </AnchorPane>
     </items>
 </SplitPane>

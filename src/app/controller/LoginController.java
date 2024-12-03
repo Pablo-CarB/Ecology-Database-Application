@@ -23,16 +23,13 @@ public class LoginController {
   @FXML
   private ToggleButton hidePassword;
 
-  @FXML
-  private Button submitLogin;
-
   private ModelImpl model = ModelImpl.getInstance();
 
   // Handle login button click (or Enter press)
   @FXML
   private void handleLoginAction() {
     String username = usernameField.getText();
-    String password = passwordField.getText();
+    String password = passwordFieldVisible.getText().isEmpty() ? passwordField.getText(): passwordFieldVisible.getText();
     try{
       model.establishConnection(username,password);
       Stage currentStage = (Stage) usernameField.getScene().getWindow();
@@ -55,10 +52,12 @@ public class LoginController {
       passwordField.setVisible(false);
       passwordFieldVisible.setVisible(true);
       passwordFieldVisible.setText(passwordField.getText());
+      passwordField.setText("");
     } else {
       passwordField.setVisible(true);
       passwordFieldVisible.setVisible(false);
       passwordField.setText(passwordFieldVisible.getText());
+      passwordFieldVisible.setText("");
     }
   }
 }
