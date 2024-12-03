@@ -210,6 +210,98 @@ CREATE TABLE Parasitism (
     FOREIGN KEY (parasite_genus_name, parasite_specific_name) REFERENCES Species (genus_name,specific_name) ON DELETE CASCADE,
     FOREIGN KEY (host_genus_name, host_specific_name) REFERENCES Species (genus_name, specific_name) ON DELETE CASCADE
 );
+
+/*
+BIOME x REGION dR Species ./vars edits
+*/
+
+-- Biome table
+CREATE TABLE Biome (
+    biome_name VARCHAR(32) PRIMARY KEY
+);
+
+-- Region table (linked to Biome)
+CREATE TABLE Region (
+    region_name VARCHAR(32),
+    longitude FLOAT,
+    latitude FLOAT,
+    biome_name VARCHAR(32) NOT NULL,
+    PRIMARY KEY (longitude, latitude),
+    FOREIGN KEY (biome_name) REFERENCES Biome(biome_name) ON DELETE CASCADE
+);
+
+-- Link species to biome and region
+CREATE TABLE SpeciesRegionBiome (
+    genus_name VARCHAR(32),
+    specific_name VARCHAR(32),
+    longitude FLOAT,
+    latitude FLOAT,
+    biome_name VARCHAR(32),
+    PRIMARY KEY (genus_name, specific_name, longitude, latitude),
+    FOREIGN KEY (genus_name, specific_name) REFERENCES Species(genus_name, specific_name) ON DELETE CASCADE,
+    FOREIGN KEY (longitude, latitude) REFERENCES Region(longitude, latitude) ON DELETE CASCADE,
+    FOREIGN KEY (biome_name) REFERENCES Biome(biome_name) ON DELETE CASCADE
+);
+
+-- Procedure to add region and link it to a biome
+DELIMITER $$
+
+CREATE PROCEDURE InsertRegion(
+    IN p_region_name VARCHAR(32),
+    IN p_biome_name VARCHAR(32),
+    IN p_longitude FLOAT,
+    IN p_latitude FLOAT
+)
+BEGIN
+    -- Ensure the Biome exists
+    IF NOT EXISTS (SELECT 1 FROM Biome WHERE biome_name = p_biome_name) THEN
+        INSERT INTO Biome (biome_name) VALUES (p_biome_name);
+    END IF;
+
+    -- Insert Region if it does not exist
+    IF NOT EXISTS (SELECT 1 FROM Region WHERE longitude = p_longitude AND latitude = p_latitude) THEN
+        INSERT INTO Region (region_name, longitude, latitude, biome_name) 
+        VALUES (p_region_name, p_longitude, p_latitude, p_biome_name);
+    END IF;
+END $$
+
+DELIMITER ;
+
+-- Procedure to link species to a region and biome
+DELIMITER $$
+
+CREATE PROCEDURE LinkSpeciesToRegionBiome(
+    IN p_genus_name VARCHAR(32),
+    IN p_specific_name VARCHAR(32),
+    IN p_longitude FLOAT,
+    IN p_latitude FLOAT,
+    IN p_biome_name VARCHAR(32)
+)
+BEGIN
+    -- Ensure the Species exists
+    IF NOT EXISTS (SELECT 1 FROM Species WHERE genus_name = p_genus_name AND specific_name = p_specific_name) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Species does not exist';
+    END IF;
+
+    -- Ensure the Region exists
+    IF NOT EXISTS (SELECT 1 FROM Region WHERE longitude = p_longitude AND latitude = p_latitude AND biome_name = p_biome_name) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Region does not exist';
+    END IF;
+
+    -- Link Species to Region and Biome
+    INSERT INTO SpeciesRegionBiome (genus_name, specific_name, longitude, latitude, biome_name)
+    VALUES (p_genus_name, p_specific_name, p_longitude, p_latitude, p_biome_name);
+END $$
+
+DELIMITER ;
+
+/* 
+End region/biome edits
+*/
+
+
 /*
 CREATE TABLE ParasiticRelation (
 	
