@@ -2,8 +2,10 @@ package app.controller;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
 import app.model.ModelImpl;
+import app.model.Species;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -13,11 +15,14 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -46,6 +51,26 @@ public class TreeController {
 
   private TreeItem<String> rootItem;
 
+  // Table variables
+  @FXML
+  private TableView<Species> speciesTable;
+  @FXML
+  private TableColumn<Species, String> genusColumn;
+  @FXML
+  private TableColumn<Species, String> specificNameColumn;
+  @FXML
+  private TableColumn<Species, String> commonNameColumn;
+  @FXML
+  private TableColumn<Species, String> feedingStrategyColumn;
+  @FXML
+  private TableColumn<Species, String> dietaryPatternColumn;
+  @FXML
+  private TableColumn<Species, Integer> yearDescribedColumn;
+  @FXML
+  private TableColumn<Species, Boolean> gregariousColumn;
+  @FXML
+  private TableColumn<Species, String> conservationStatusColumn;
+
   public void initialize() {
     this.rootItem = new TreeItem<>("Database");
     treeOfLife.setRoot(rootItem);
@@ -53,11 +78,58 @@ public class TreeController {
 
     ContextMenu contextMenu = new ContextMenu();
 
+    populateTree("Domain", "");
+
     // handles right click
     rightClickHandler(contextMenu);
 
     // TreeView Styling
     treeStyling();
+
+    genusColumn.setCellValueFactory(new PropertyValueFactory<>("genus"));
+    specificNameColumn.setCellValueFactory(new PropertyValueFactory<>("specificName"));
+    commonNameColumn.setCellValueFactory(new PropertyValueFactory<>("commonName"));
+    feedingStrategyColumn.setCellValueFactory(new PropertyValueFactory<>("strategyName"));
+    dietaryPatternColumn.setCellValueFactory(new PropertyValueFactory<>("dietName"));
+    yearDescribedColumn.setCellValueFactory(new PropertyValueFactory<>("yearDescribed"));
+    gregariousColumn.setCellValueFactory(new PropertyValueFactory<>("gregarious"));
+    conservationStatusColumn.setCellValueFactory(new PropertyValueFactory<>("conservationStatus"));
+
+    treeOfLife.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+      String[] words = newValue.getValue().split("\\s+");
+      String taxa = words[words.length - 1].replaceAll("[()]", "");
+      if (taxa.equals("Species")) {
+        displaySpeciesDetails(newValue,words[0]);
+      }
+    });
+
+  }
+
+  private void populateTree(String parentType,String parentName) {
+    // Start with a generic query to get the subcategories for the given parent
+    List<String> subTaxa = model.querySubTaxa(parentType, parentName);  // Query the database for subcategories
+
+    for (String subTaxon : subTaxa) {
+      // Create a new TreeItem for each subcategory (e.g., Kingdoms under Domain, Phyla under Kingdom)
+      TreeItem<String> subTaxonItem = new TreeItem<>(subTaxon + " (" + parentType + ")");
+      rootItem.getChildren().add(subTaxonItem);  // Add the subTaxon item as a child of the current node
+
+      // Recursively populate the children for this subTaxon
+      populateTree(descendHeirarchy.get(parentType), subTaxon);
+    }
+  }
+
+  private void displaySpeciesDetails(TreeItem<String> selectedItem,String specificName) {
+    String[] words = selectedItem.getParent().getValue().split("\\s+");
+    String genus = words[words.length - 1].replaceAll("[()]", "");
+
+    Species speciesDetails = model.querySpeciesDetails(genus, specificName);
+
+    if (speciesDetails != null) {
+      // Populate the TableView with the species details
+      speciesTable.getItems().clear();  // Clear previous entries
+      speciesTable.getItems().add(speciesDetails);  // Add the new species details
+    }
   }
 
   // creates correct menu option given TreeItem

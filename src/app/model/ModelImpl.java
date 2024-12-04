@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 import app.ConservationStatus;
 
-public class ModelImpl implements Model{
+public class ModelImpl{
 
   private static ModelImpl instance;
   Connection connection;
@@ -68,7 +68,6 @@ public class ModelImpl implements Model{
     return instance;
   }
 
-  @Override
   public void establishConnection(String username, String password) throws Exception {
     Properties connectionProps = new Properties();
     connectionProps.put("user", username);
@@ -201,6 +200,85 @@ public class ModelImpl implements Model{
 
     PreparedStatement idStmt = connection.prepareStatement(insertQuery);
     idStmt.executeUpdate();
+  }
+  public List<String> querySubTaxa(String parentType, String parentName) {
+    List<String> subTaxa = new ArrayList<>();
+    String query = "";
+
+    switch (parentType) {
+      case "Database":
+        query = "SELECT * FROM Domain;";
+        break;
+      case "Domain":
+        query = "SELECT kingdom_name FROM Kingdom WHERE domain_name = ?";
+        break;
+      case "Kingdom":
+        query = "SELECT phylum_name FROM Phylum WHERE kingdom_name = ?";
+        break;
+      case "Phylum":
+        query = "SELECT class_name FROM Class WHERE phylum_name = ?";
+        break;
+      case "Class":
+        query = "SELECT order_name FROM `Order` WHERE class_name = ?";
+        break;
+      case "Order":
+        query = "SELECT family_name FROM Family WHERE order_name = ?";
+        break;
+      case "Family":
+        query = "SELECT genus_name FROM Genus WHERE family_name = ?";
+        break;
+      case "Genus":
+        query = "SELECT CONCAT(genus_name, ' ', specific_name) AS species_name FROM Species WHERE genus_name = ?";
+        break;
+      default:
+        return subTaxa;
+    }
+
+    try (PreparedStatement stmt = this.connection.prepareStatement(query)) {
+      stmt.setString(1, parentName);
+
+      try (ResultSet rs = stmt.executeQuery()) {
+        while (rs.next()) {
+          subTaxa.add(rs.getString(1));
+        }
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+
+    return subTaxa;
+  }
+
+  public Species querySpeciesDetails(String genusName, String specificName) {
+    String query = "SELECT s.genus_name, s.specific_name, s.common_name, s.conservation_status, " +
+            "s.year_described, s.diet_name, s.strategy_name, s.gregarious " +
+            "FROM Species s " +
+            "WHERE s.genus_name = ? AND s.specific_name = ?";
+
+    try (PreparedStatement stmt = connection.prepareStatement(query)) {
+      stmt.setString(1, genusName);
+      stmt.setString(2, specificName);
+
+      try (ResultSet rs = stmt.executeQuery()) {
+        if (rs.next()) {
+          String genus = rs.getString("genus_name");
+          String species = rs.getString("specific_name");
+          String commonName = rs.getString("common_name");
+          String conservationStatus = rs.getString("conservation_status");
+          int yearDescribed = rs.getInt("year_described");
+          String dietName = rs.getString("diet_name");
+          String strategyName = rs.getString("strategy_name");
+          boolean gregarious = rs.getBoolean("gregarious");
+
+          return new Species(genus, species, commonName, conservationStatus, yearDescribed,
+                  dietName, strategyName, gregarious);
+        }
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+
+    return null;
   }
 }
 
