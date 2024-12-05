@@ -1,9 +1,13 @@
 package app.controller;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
+import app.Utils;
 import app.model.ModelImpl;
 import app.model.Species;
 import javafx.fxml.FXML;
@@ -27,23 +31,12 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 
 public class TreeController {
 
   @FXML
   private TreeView<String> treeOfLife;
-
-
-  private final HashMap<String, String> descendHeirarchy = new HashMap<>() {{
-    put("Database", "Domain");
-    put("Domain", "Kingdom");
-    put("Kingdom", "Phylum");
-    put("Phylum", "Class");
-    put("Class", "Order");
-    put("Order", "Family");
-    put("Family", "Genus");
-    put("Genus", "Species");
-  }};
 
   private ModelImpl model = ModelImpl.getInstance();
 
@@ -78,15 +71,21 @@ public class TreeController {
 
     ContextMenu contextMenu = new ContextMenu();
 
-    populateTree("Domain", "");
+    populateTree("Database", "",rootItem);
 
     // handles right click
     rightClickHandler(contextMenu);
 
+    // Check if speciesTable is added to the layout
+    if (speciesTable.getParent() == null) {
+      System.out.println("TableView is not added to the layout!");
+    }
+
+
     // TreeView Styling
     treeStyling();
 
-    genusColumn.setCellValueFactory(new PropertyValueFactory<>("genus"));
+    genusColumn.setCellValueFactory(new PropertyValueFactory<>("genusName"));
     specificNameColumn.setCellValueFactory(new PropertyValueFactory<>("specificName"));
     commonNameColumn.setCellValueFactory(new PropertyValueFactory<>("commonName"));
     feedingStrategyColumn.setCellValueFactory(new PropertyValueFactory<>("strategyName"));
@@ -105,38 +104,48 @@ public class TreeController {
 
   }
 
-  private void populateTree(String parentType,String parentName) {
-    // Start with a generic query to get the subcategories for the given parent
-    List<String> subTaxa = model.querySubTaxa(parentType, parentName);  // Query the database for subcategories
-
+  private void populateTree(String parentType,String parentName,TreeItem<String> node) {
+    List<String> subTaxa = model.querySubTaxa(parentType, parentName);
+    System.out.println(parentType);
+    System.out.println(Arrays.toString(subTaxa.toArray()));
     for (String subTaxon : subTaxa) {
-      // Create a new TreeItem for each subcategory (e.g., Kingdoms under Domain, Phyla under Kingdom)
-      TreeItem<String> subTaxonItem = new TreeItem<>(subTaxon + " (" + parentType + ")");
-      rootItem.getChildren().add(subTaxonItem);  // Add the subTaxon item as a child of the current node
+      TreeItem<String> subTaxonItem = new TreeItem<>(subTaxon
+              + " (" + Utils.descendHeirarchy.get(parentType) + ")");
+      node.getChildren().add(subTaxonItem);
 
-      // Recursively populate the children for this subTaxon
-      populateTree(descendHeirarchy.get(parentType), subTaxon);
+      populateTree(Utils.descendHeirarchy.get(parentType), subTaxon, subTaxonItem);
     }
   }
 
-  private void displaySpeciesDetails(TreeItem<String> selectedItem,String specificName) {
+  private void displaySpeciesDetails(TreeItem<String> selectedItem, String specificName) {
+    // Parse the genus from the selected TreeItem
     String[] words = selectedItem.getParent().getValue().split("\\s+");
-    String genus = words[words.length - 1].replaceAll("[()]", "");
+    String genus = words[0].replaceAll("[()]", "");
 
+    // Query the species details from the model
     Species speciesDetails = model.querySpeciesDetails(genus, specificName);
 
     if (speciesDetails != null) {
-      // Populate the TableView with the species details
-      speciesTable.getItems().clear();  // Clear previous entries
-      speciesTable.getItems().add(speciesDetails);  // Add the new species details
+      // Add the species data to the table
+      speciesTable.getItems().clear();  // Clear previous items
+      speciesTable.getItems().add(speciesDetails);  // Add new data
+
+
+    } else {
+      // Show alert if no data found
+      Alert alert = new Alert(Alert.AlertType.WARNING, "Species details not found!");
+      alert.showAndWait();
     }
   }
+
+
+
 
   // creates correct menu option given TreeItem
   private void menuSetter(ContextMenu contextMenu, TreeItem<String> selected) {
     String[] words = selected.getValue().split("\\s+");
     String taxa = words[words.length - 1].replaceAll("[()]", "");
-    String subTaxa = descendHeirarchy.get(taxa);
+    String subTaxa = Utils.descendHeirarchy.get(taxa);
 
     MenuItem addSubTaxa = new MenuItem("Add " + subTaxa);
     addSubTaxa.setOnAction(e -> addSingleTaxaWindow(selected, "(" + subTaxa + ")", true));
@@ -171,28 +180,22 @@ public class TreeController {
     addItemStage.setTitle("Add New " + taxaType.replaceAll("[()]", ""));
     addItemStage.setScene(addItemScene);
 
-
-    // Action for the Add button
     addButton.setOnAction(e -> {
       addItem(nameField, selectedItem, taxaType, subTaxa, addItemStage);
     });
 
-    // Action for the Enter key
     nameField.setOnAction(e -> {
       addItem(nameField, selectedItem, taxaType, subTaxa, addItemStage);
     });
 
-    // Close the window when the TextField loses focus (but only if the button doesn't have focus)
+    // Close the window when the TextField loses focus only if the button doesn't have focus
     nameField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
       if (!isNowFocused) {
-        // If the button has focus, don't close the window
         if (!addButton.isFocused()) {
-          addItemStage.close(); // Close the stage only when focus is lost (but not on button click)
+          addItemStage.close();
         }
       }
     });
-
-    // Show the stage
     addItemStage.show();
 
   }
@@ -201,11 +204,35 @@ public class TreeController {
                        boolean subTaxa, Stage addItemStage) {
     String newItemName = nameField.getText();
     TreeItem<String> newItem = new TreeItem<>(newItemName + " " + taxaType);
-    if (subTaxa) {
-      selectedItem.getChildren().add(0, newItem);  // Add new item under selected node
-      selectedItem.setExpanded(true);
-    } else {
-      selectedItem.getParent().getChildren().add(0, newItem);
+    try{
+      if (subTaxa) {
+        String table = taxaType.replaceAll("[()]","");
+        String[] words = selectedItem.getValue().split("\\s+");
+        List<Pair<Object, Integer>> list = new ArrayList<>();
+        list.add(new Pair<>(newItemName, Types.VARCHAR));
+        list.add(new Pair<>(words[0], Types.VARCHAR));
+
+        model.insertRow(table,list);
+        selectedItem.getChildren().add(0, newItem);
+        selectedItem.setExpanded(true);
+      } else {
+        if(selectedItem.getParent() == rootItem){
+          List<Pair<Object, Integer>> list = new ArrayList<>();
+          list.add(new Pair<>(newItemName, Types.VARCHAR));
+          model.insertRow("Domain",list);
+        }
+        else{
+          String[] words = selectedItem.getParent().getValue().split("\\s+");
+          List<Pair<Object, Integer>> list = new ArrayList<>();
+          list.add(new Pair<>(newItemName, Types.VARCHAR));
+          list.add(new Pair<>(words[0], Types.VARCHAR));
+          model.insertRow(taxaType.replaceAll("[()]", ""),list);
+        }
+        selectedItem.getParent().getChildren().add(0, newItem);
+      }
+    }
+    catch (Exception e){
+      Utils.showErrorMessage("ERROR",e.getMessage());
     }
     addItemStage.close();
   }
@@ -237,7 +264,7 @@ public class TreeController {
         MenuItem addItem = new MenuItem("Add " + taxa);
         if (taxa.equals("Species")){
           addItem.setOnAction(event1 -> {
-            openSpeciesPane(selectedItem);
+            openSpeciesPane(selectedItem.getParent());
           });
         }
         else{
@@ -252,18 +279,29 @@ public class TreeController {
           handleDeleteAction(selectedItem);
         });
 
-        contextMenu.getItems().addAll(addItem, deleteItem);
+        // add option for editing taxa
+        MenuItem editItem = new MenuItem("Edit " + taxa);
+        if (taxa.equals("Species")){
+          addItem.setOnAction(event1 -> {
+            openSpeciesPane(selectedItem);
+          });
+        }
+        else{
+          addItem.setOnAction(event1 -> {
+            addSingleTaxaWindow(selectedItem, "(" + taxa + ")", false);
+          });
+        }
+
+        contextMenu.getItems().addAll(addItem, editItem, deleteItem);
 
       }
 
-      // Show the context menu at the mouse position
       contextMenu.show(treeOfLife, event.getScreenX(), event.getScreenY());
     });
   }
 
   private void handleDeleteAction(TreeItem<String> selectedItem) {
     if (deleteWarningShown) {
-      // Delete the item normally
       if (selectedItem != rootItem) {
         TreeItem<String> parent = selectedItem.getParent();
         if (parent != null) {
@@ -288,7 +326,6 @@ public class TreeController {
           }
         }
 
-        // Mark that the warning has been shown and subsequent deletes don't trigger the warning
         deleteWarningShown = true;
       }
     }
@@ -326,19 +363,26 @@ public class TreeController {
     });
   }
 
-  private void openSpeciesPane(TreeItem<String> selectedItem) {
+  private void openSpeciesPane(TreeItem<String> GenusNode) {
     try {
       FXMLLoader loader = new FXMLLoader(getClass().getResource("AddSpeciesWindow.fxml"));
+
       Pane speciesPane = loader.load();
 
-      // Create a scene with the species pane
+      InsertSpeciesController controller = loader.getController();
+
+
       Stage speciesStage = new Stage();
       Scene speciesScene = new Scene(speciesPane);
       speciesStage.setScene(speciesScene);
       speciesStage.setTitle("Edit Species Information");
       speciesStage.show();
+      System.out.println(GenusNode.getValue());
+      controller.setGenus(GenusNode);
     } catch (IOException e) {
-      e.printStackTrace();
+      Utils.showErrorMessage("ERROR",
+              "something went wrong with this apps internal files, attempt re downloading");
     }
   }
+
 }

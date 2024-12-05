@@ -1,7 +1,9 @@
 package app.model;
 
+import java.lang.reflect.Type;
 import java.sql.DatabaseMetaData;
-import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.*;
 
 import java.sql.Connection;
@@ -10,7 +12,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+
 import app.ConservationStatus;
+import app.Utils;
+import javafx.util.Pair;
 
 public class ModelImpl{
 
@@ -53,8 +58,8 @@ public class ModelImpl{
     tables.add("Family");
     tables.add("Genus");
     tables.add("Species");
-    tables.add("DietaryPattern");
-    tables.add("FeedingStrategy");
+    tables.add("Dietarypattern");
+    tables.add("Feedingstrategy");
     tables.add("Predation");
     tables.add("Mutualism");
     tables.add("Parasitism");
@@ -98,7 +103,7 @@ public class ModelImpl{
     }
   }
 
-  public void insertRow(String table, String... attributes) throws SQLException{
+  public void insertRow(String table, List<Pair<Object, Integer>> attributes) throws SQLException{
     // check if the table actually exists in the db
     table = formatTableName(table);
     if (!tables.contains(table)) {
@@ -111,7 +116,6 @@ public class ModelImpl{
     PreparedStatement idStmt = null;
 
     try{
-
       // retrieve columns from table
       columns = metaData.getColumns(this.dbName, null, table, null);
       StringBuilder columnString = new StringBuilder();
@@ -123,16 +127,16 @@ public class ModelImpl{
       }
 
       if (columnString.length() == 0) {
-        throw new SQLException("ERROR: No columns found for table: " + table);
+        throw new SQLException("No columns found for table: " + table);
       }
 
-      if (attributes.length != columnString.toString().split(",").length) {
-        throw new SQLException("ERROR: number of values inputted is incorrect" + Arrays.toString(attributes) +
+      if (attributes.size() != columnString.toString().split(",").length) {
+        throw new SQLException("Number of values inputted is incorrect" + Arrays.toString(attributes.toArray()) +
                 columnString);
       }
 
       StringBuilder placeholders = new StringBuilder();
-      for (int i = 0; i < attributes.length; i++) {
+      for (int i = 0; i < attributes.size(); i++) {
         if (i > 0) {
           placeholders.append(", ");
         }
@@ -143,10 +147,14 @@ public class ModelImpl{
 
       idStmt = connection.prepareStatement(insertQuery);
 
-      for (int i = 0; i < attributes.length; i++) {
-        idStmt.setString(i + 1, attributes[i]);
-      }
+      for (int i = 0; i < attributes.size(); i++) {
+        Object value = attributes.get(i).getKey();
+        int sqlType = attributes.get(i).getValue();
 
+        idStmt.setObject(i+1,value,sqlType);
+      }
+      System.out.println(insertQuery);
+      System.out.println(Arrays.toString(attributes.toArray()));
       idStmt.executeUpdate();
 
     }
@@ -155,6 +163,7 @@ public class ModelImpl{
         throw new SQLException("the "+table+" already exists in the database");
       }
       else{
+        e.printStackTrace();
         throw e;
       }
     }
@@ -168,15 +177,49 @@ public class ModelImpl{
       }
     }
   }
-  public void queryTable(String table) throws SQLException{
+  public List<String> queryTable(String table) throws SQLException{
     table = formatTableName(table);
-    if (tables.contains(table)) {
+    if (!tables.contains(table)) {
       throw new SQLException("ERROR: Invalid table name");
     }
+    System.out.println(table);
+    String tableQuery = "Select * FROM "+table +";";
+    // Use a Statement instead of PreparedStatement since there are no parameters
+    Statement stmt = null;
+    ResultSet rs = null;
+    List<String> list = new ArrayList<>();
 
-    String tableQuery = "Select * FROM `table`;";
-    PreparedStatement idStmt = connection.prepareStatement(tableQuery);
-    idStmt.executeQuery();
+    try {
+      // Create a statement and execute the query
+      stmt = connection.createStatement();
+      rs = stmt.executeQuery(tableQuery);
+
+      // Process the result set
+      while (rs.next()) {
+        list.add(rs.getString(1)); // Assuming you want to fetch the first column
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      throw e;
+    } finally {
+      // Close resources properly in a finally block
+      if (rs != null) {
+        try {
+          rs.close();
+        } catch (SQLException e) {
+          e.printStackTrace();
+        }
+      }
+      if (stmt != null) {
+        try {
+          stmt.close();
+        } catch (SQLException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+
+    return list;
   }
 
   public void updateRow(String table, String... attributes) throws SQLException{
@@ -205,44 +248,38 @@ public class ModelImpl{
     List<String> subTaxa = new ArrayList<>();
     String query = "";
 
-    switch (parentType) {
-      case "Database":
+    PreparedStatement stmt = null;
+
+    try{
+      if(parentType.equals("Database")){
         query = "SELECT * FROM Domain;";
-        break;
-      case "Domain":
-        query = "SELECT kingdom_name FROM Kingdom WHERE domain_name = ?";
-        break;
-      case "Kingdom":
-        query = "SELECT phylum_name FROM Phylum WHERE kingdom_name = ?";
-        break;
-      case "Phylum":
-        query = "SELECT class_name FROM Class WHERE phylum_name = ?";
-        break;
-      case "Class":
-        query = "SELECT order_name FROM `Order` WHERE class_name = ?";
-        break;
-      case "Order":
-        query = "SELECT family_name FROM Family WHERE order_name = ?";
-        break;
-      case "Family":
-        query = "SELECT genus_name FROM Genus WHERE family_name = ?";
-        break;
-      case "Genus":
-        query = "SELECT CONCAT(genus_name, ' ', specific_name) AS species_name FROM Species WHERE genus_name = ?";
-        break;
-      default:
-        return subTaxa;
-    }
-
-    try (PreparedStatement stmt = this.connection.prepareStatement(query)) {
-      stmt.setString(1, parentName);
-
-      try (ResultSet rs = stmt.executeQuery()) {
-        while (rs.next()) {
-          subTaxa.add(rs.getString(1));
-        }
+        stmt = this.connection.prepareStatement(query);
       }
-    } catch (SQLException e) {
+      else if(parentType.equals("Genus")) {
+        query = "SELECT * FROM Species WHERE genus_name = ?";
+        stmt = this.connection.prepareStatement(query);
+        stmt.setString(1, parentName);
+      }
+      else{
+        String firstVar =  parentType.toLowerCase()+"_name";
+        String secondVar = Utils.descendHeirarchy.get(parentType).toLowerCase()+"_name";
+
+        query = "SELECT " + secondVar + " FROM `" + Utils.descendHeirarchy.get(parentType) + "` WHERE " + firstVar + " = ?";
+
+        stmt = this.connection.prepareStatement(query);
+        stmt.setString(1, parentName);
+      }
+      ResultSet rs = stmt.executeQuery();
+      int var = 1;
+      if(parentType.equals("Genus")){
+        var = 2;
+      }
+      while (rs.next()) {
+        subTaxa.add(rs.getString(var));
+      }
+
+    }
+    catch (Exception e){
       e.printStackTrace();
     }
 
@@ -250,16 +287,22 @@ public class ModelImpl{
   }
 
   public Species querySpeciesDetails(String genusName, String specificName) {
-    String query = "SELECT s.genus_name, s.specific_name, s.common_name, s.conservation_status, " +
-            "s.year_described, s.diet_name, s.strategy_name, s.gregarious " +
-            "FROM Species s " +
-            "WHERE s.genus_name = ? AND s.specific_name = ?";
+    String query = "SELECT * FROM Species WHERE genus_name = ? AND specific_name = ?";
 
     try (PreparedStatement stmt = connection.prepareStatement(query)) {
-      stmt.setString(1, genusName);
-      stmt.setString(2, specificName);
+
+      // Debugging: Print the query parameters
+      System.out.println("Executing query with genus_name = " + genusName + " and specific_name = " + specificName);
+
+      stmt.setString(1, genusName.trim()); // Trim spaces before setting
+      stmt.setString(2, specificName.trim()); // Trim spaces before setting
+
+      System.out.println(query);
 
       try (ResultSet rs = stmt.executeQuery()) {
+        System.out.println("Query executed successfully");
+
+        // Check if ResultSet is not empty
         if (rs.next()) {
           String genus = rs.getString("genus_name");
           String species = rs.getString("specific_name");
@@ -268,17 +311,36 @@ public class ModelImpl{
           int yearDescribed = rs.getInt("year_described");
           String dietName = rs.getString("diet_name");
           String strategyName = rs.getString("strategy_name");
-          boolean gregarious = rs.getBoolean("gregarious");
+
+          // Handle the 'gregarious' field which is stored as an integer (0 or 1)
+          int gregariousInt = rs.getInt("gregarious");
+          boolean gregarious = (gregariousInt == 1); // Convert 1 to true, 0 to false
+
+          // Print the retrieved data for debugging
+          System.out.println("Found species: " + genus + " " + species + " - " +
+                  commonName + ", " + conservationStatus + ", " + yearDescribed +
+                  ", " + dietName + ", " + strategyName + ", gregarious: " + gregarious);
 
           return new Species(genus, species, commonName, conservationStatus, yearDescribed,
                   dietName, strategyName, gregarious);
+        } else {
+          System.out.println("No species found for genus: " + genusName + " and specificName: " + specificName);
         }
+      } catch (SQLException e) {
+        Utils.showErrorMessage("ERROR","Error executing the query: " + e.getMessage());
+        e.printStackTrace();
       }
+
     } catch (SQLException e) {
+      // Outer SQLException (connection/statement issue)
+      Utils.showErrorMessage("ERROR","preparing the statement or connection issue:" + e.getMessage());
       e.printStackTrace();
     }
 
-    return null;
+    return null; // Return null if no result found
   }
+
+
+
 }
 

@@ -1,11 +1,9 @@
 <component name="ArtifactManager">
   <artifact type="jar" name="Ecology-Database-Application:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts</output-path>
+    <output-path>$PROJECT_DIR$/out/artifacts/Ecology_Database_Application_jar</output-path>
     <root id="archive" name="Ecology-Database-Application.jar">
-      <element id="directory" name="META-INF">
-        <element id="file-copy" path="$PROJECT_DIR$/jar_file/META-INF/MANIFEST.MF" />
-      </element>
       <element id="module-output" name="Ecology-Database-Application" />
+      <element id="extracted-dir" path="/Library/Java/Extensions/mysql-connector-j-9.1.0/mysql-connector-j-9.1.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/Contents/Home/javafx-sdk-14.0.2.1/lib/javafx-swt.jar" path-in-jar="/" />
       <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/Contents/Home/javafx-sdk-14.0.2.1/lib/javafx.web.jar" path-in-jar="/" />
       <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/Contents/Home/javafx-sdk-14.0.2.1/lib/javafx.base.jar" path-in-jar="/" />
@@ -14,7 +12,6 @@
       <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/Contents/Home/javafx-sdk-14.0.2.1/lib/javafx.swing.jar" path-in-jar="/" />
       <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/Contents/Home/javafx-sdk-14.0.2.1/lib/javafx.controls.jar" path-in-jar="/" />
       <element id="extracted-dir" path="/Library/Java/JavaVirtualMachines/jdk-14.0.2.jdk/Contents/Home/javafx-sdk-14.0.2.1/lib/javafx.graphics.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="/Library/Java/Extensions/mysql-connector-j-9.1.0/mysql-connector-j-9.1.0.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

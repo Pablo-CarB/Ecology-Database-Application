@@ -1,6 +1,7 @@
-package app.controller;
+package app;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -10,8 +11,19 @@ import javafx.stage.Stage;
 
 public class Utils {
 
+  public static final HashMap<String, String> descendHeirarchy = new HashMap<>() {{
+    put("Database", "Domain");
+    put("Domain", "Kingdom");
+    put("Kingdom", "Phylum");
+    put("Phylum", "Class");
+    put("Class", "Order");
+    put("Order", "Family");
+    put("Family", "Genus");
+    put("Genus", "Species");
+  }};
+
   public static void switchScene(Stage currentStage, String fxmlFile, String title) throws IOException {
-    FXMLLoader loader = new FXMLLoader(Utils.class.getResource(fxmlFile));
+    FXMLLoader loader = new FXMLLoader(Utils.class.getResource("controller/"+fxmlFile));
     Parent newRoot = loader.load();
     currentStage.setTitle(title);
     Scene newScene = new Scene(newRoot);

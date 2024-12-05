@@ -8,33 +8,37 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class Species {
-  private final StringProperty genus;
-  private final StringProperty speciesName;
-  private final StringProperty commonName;
-  private final StringProperty conservationStatus;
-  private final IntegerProperty yearDescribed;
-  private final StringProperty dietName;
-  private final StringProperty strategyName;
-  private final BooleanProperty gregarious;
 
-  public Species(String genus, String speciesName, String commonName, String conservationStatus,
+  // Fields from the database
+  private final StringProperty genusName = new SimpleStringProperty();
+  private final StringProperty specificName = new SimpleStringProperty();
+  private final StringProperty commonName = new SimpleStringProperty();
+  private final StringProperty conservationStatus = new SimpleStringProperty();
+  private final IntegerProperty yearDescribed = new SimpleIntegerProperty();
+  private final StringProperty dietName = new SimpleStringProperty();
+  private final StringProperty strategyName = new SimpleStringProperty();
+  private final BooleanProperty gregarious = new SimpleBooleanProperty();
+
+  // Constructor to initialize the fields
+  public Species(String genus, String species, String commonName, String conservationStatus,
                  int yearDescribed, String dietName, String strategyName, boolean gregarious) {
-    this.genus = new SimpleStringProperty(genus);
-    this.speciesName = new SimpleStringProperty(speciesName);
-    this.commonName = new SimpleStringProperty(commonName);
-    this.conservationStatus = new SimpleStringProperty(conservationStatus);
-    this.yearDescribed = new SimpleIntegerProperty(yearDescribed);
-    this.dietName = new SimpleStringProperty(dietName);
-    this.strategyName = new SimpleStringProperty(strategyName);
-    this.gregarious = new SimpleBooleanProperty(gregarious);
+    this.genusName.set(genus);
+    this.specificName.set(species);
+    this.commonName.set(commonName);
+    this.conservationStatus.set(conservationStatus);
+    this.yearDescribed.set(yearDescribed);
+    this.dietName.set(dietName);
+    this.strategyName.set(strategyName);
+    this.gregarious.set(gregarious);
   }
 
-  public StringProperty genusProperty() {
-    return genus;
+  // Getter methods for properties
+  public StringProperty genusNameProperty() {
+    return genusName;
   }
 
-  public StringProperty speciesNameProperty() {
-    return speciesName;
+  public StringProperty speciesProperty() {
+    return specificName;
   }
 
   public StringProperty commonNameProperty() {
@@ -60,4 +64,72 @@ public class Species {
   public BooleanProperty gregariousProperty() {
     return gregarious;
   }
+
+  // Getter methods for the values (if needed)
+  public String getGenusName() {
+    return genusName.get();
+  }
+
+  public String getSpecies() {
+    return specificName.get();
+  }
+
+  public String getCommonName() {
+    return commonName.get();
+  }
+
+  public String getConservationStatus() {
+    return conservationStatus.get();
+  }
+
+  public int getYearDescribed() {
+    return yearDescribed.get();
+  }
+
+  public String getDietName() {
+    return dietName.get();
+  }
+
+  public String getStrategyName() {
+    return strategyName.get();
+  }
+
+  public boolean isGregarious() {
+    return gregarious.get();
+  }
+
+  // Setters (if needed)
+  public void setGenusName(String genusName) {
+    this.genusName.set(genusName);
+  }
+
+  public void setSpecies(String species) {
+    this.specificName.set(species);
+  }
+
+  public void setCommonName(String commonName) {
+    this.commonName.set(commonName);
+  }
+
+  public void setConservationStatus(String conservationStatus) {
+    this.conservationStatus.set(conservationStatus);
+  }
+
+  public void setYearDescribed(int yearDescribed) {
+    this.yearDescribed.set(yearDescribed);
+  }
+
+  public void setDietName(String dietName) {
+    this.dietName.set(dietName);
+  }
+
+  public void setStrategyName(String strategyName) {
+    this.strategyName.set(strategyName);
+  }
+
+  public void setGregarious(boolean gregarious) {
+    this.gregarious.set(gregarious);
+  }
 }
+
+

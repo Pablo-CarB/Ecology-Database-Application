@@ -1,8 +1,8 @@
 package app.controller;
 
+import app.Utils;
 import app.model.ModelImpl;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
@@ -36,6 +36,7 @@ public class LoginController {
       Utils.switchScene(currentStage,"Tree.fxml","Tree View");
     }
     catch (Exception e){
+      e.printStackTrace();
       Utils.showErrorMessage("ERROR",e.getMessage());
     }
 
