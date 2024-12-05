@@ -1,17 +1,17 @@
 USE ecosystem_db;
 
--- Insert Domains (Static Data)
+-- Insert Domains 
 INSERT IGNORE INTO Domain(domain_name) VALUES ('Eukarya'), ('Bacteria'), ('Archaea');
 
--- Insert Kingdoms (Static Data)
+-- Insert Kingdoms 
 INSERT IGNORE INTO Kingdom(kingdom_name, domain_name) VALUES 
 ('Animalia', 'Eukarya'), ('Plantae', 'Eukarya'), ('Fungi', 'Eukarya');
 
--- Insert Phylums (Static Data)
+-- Insert Phylums 
 INSERT IGNORE INTO Phylum(phylum_name, kingdom_name) VALUES 
 ('Chordata', 'Animalia'), ('Magnoliophyta', 'Plantae');
 
--- Insert  Genera (Static Data)
+-- Insert  Genera 
 INSERT IGNORE INTO Genus(genus_name, phylum_name) VALUES 
 ('Panthera', 'Chordata'),
 ('Lucilia', 'Chordata'), 
@@ -87,7 +87,7 @@ VALUES
   ('pollinator'),
   ('pack hunter');
 
--- Insert Data into Species Table (Dynamic Data, No Update Needed)
+-- Insert Data into Species Table 
 INSERT IGNORE INTO Species (genus_name, specific_name, conservation_status, year_described, common_name, gregarious, diet_name, strategy_name) 
 VALUES 
 -- Plants (Autotrophs and Photoautotrophs)
@@ -140,21 +140,22 @@ VALUES
 ('Gryllus', 'campestris', 'least concern', 1758, 'Field Cricket', TRUE, 'omnivore', 'n/a'),
 ('Lucilia', 'sericata', 'least concern', 1758, 'Green Bottle Fly', TRUE, 'saprotroph', 'n/a');
 
--- Insert Regions (Static Data)
+-- Insert Regions 
 INSERT IGNORE INTO Region(region_name, latitude, longitude) VALUES
 ('Amazon Rainforest', -3.4653, -62.2159),
 ('Sahara Desert', 23.4162, 25.6628);
 
--- Insert Biomes (Dynamic Data, Updates Allowed)
+-- Insert Biomes 
 INSERT INTO Biome(biome_name, region_id) VALUES
 ('Rainforest', 1),
 ('Desert', 2)
 ON DUPLICATE KEY UPDATE region_id = VALUES(region_id);
 
--- Insert Species_Biome (Dynamic Data, Updates Allowed)
+-- Insert Species_Biome 
 INSERT INTO Species_Biome (genus_name, specific_name, biome_name) VALUES
 ('Lucilia', 'sericata', 'Rainforest'),
 ('Giraffa', 'camelopardalis', 'Desert'),
 ('Panthera', 'tigris', 'Rainforest'),
 ('Quercus', 'robur', 'Desert')
 ON DUPLICATE KEY UPDATE biome_name = VALUES(biome_name);
+
