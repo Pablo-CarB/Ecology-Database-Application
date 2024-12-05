@@ -76,14 +76,14 @@ DELIMITER ;
 -- Region Table
 CREATE TABLE Region (
     region_id INT AUTO_INCREMENT PRIMARY KEY,
-    region_name VARCHAR(100),
+    region_name VARCHAR(100) UNIQUE,
     latitude DECIMAL(6,3), -- ranges from -90.000 to 90.000
     longitude DECIMAL(7,3) -- ranges from -180.000 to 180.000
 );
 
 -- Biome Table
 CREATE TABLE Biome (
-    biome_name VARCHAR(50) PRIMARY KEY,
+    biome_name VARCHAR(50) UNIQUE PRIMARY KEY,
     region_id INT,
     FOREIGN KEY (region_id) REFERENCES Region(region_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -116,13 +116,6 @@ CREATE TABLE Species_Biome (
     FOREIGN KEY (biome_name) REFERENCES Biome(biome_name) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE DebugTriggerLog (
-    genus_name VARCHAR(50),
-    specific_name VARCHAR(50),
-    error_message VARCHAR(255),
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
 DELIMITER //
 CREATE TRIGGER BeforeInsertSpeciesBiome
 BEFORE INSERT ON Species_Biome
@@ -133,8 +126,6 @@ BEGIN
         FROM Species 
         WHERE genus_name = NEW.genus_name AND specific_name = NEW.specific_name
     ) THEN
-        INSERT INTO DebugTriggerLog (genus_name, specific_name, error_message)
-        VALUES (NEW.genus_name, NEW.specific_name, 'Species does not exist in the Species table');
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Species does not exist in the Species table';
     END IF;
