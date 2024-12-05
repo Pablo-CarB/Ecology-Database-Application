@@ -70,7 +70,8 @@ BEGIN
         SET MESSAGE_TEXT = 'Genus does not exist in the Genus table';
     END IF;
 END //
-DELIMITER ;*/
+DELIMITER ;
+*/
 
 -- Region Table
 CREATE TABLE Region (
@@ -86,6 +87,24 @@ CREATE TABLE Biome (
     region_id INT,
     FOREIGN KEY (region_id) REFERENCES Region(region_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+DELIMITER //
+CREATE TRIGGER BeforeInsertBiome
+BEFORE INSERT ON Biome
+FOR EACH ROW
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM Region
+        WHERE region_id = NEW.region_id
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Region does not exist in the Region table';
+    END IF;
+END //
+
+DELIMITER ;
+
 
 --  Species_Biome Table
 CREATE TABLE Species_Biome (
@@ -151,6 +170,30 @@ CREATE TABLE Species_Relationship (
     FOREIGN KEY (genus1_name, specific1_name) REFERENCES Species(genus_name, specific_name) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (genus2_name, specific2_name) REFERENCES Species(genus_name, specific_name) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+DELIMITER //
+CREATE TRIGGER BeforeInsertSpeciesRelationship
+BEFORE INSERT ON Species_Relationship
+FOR EACH ROW
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM Species
+        WHERE genus_name = NEW.genus1_name AND specific_name = NEW.specific1_name
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'First species in the relationship does not exist in the Species table';
+    END IF;
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM Species
+        WHERE genus_name = NEW.genus2_name AND specific_name = NEW.specific2_name
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Second species in the relationship does not exist in the Species table';
+    END IF;
+END //
+DELIMITER ;
 
 -- Updated ConservationStatusLog Table
 CREATE TABLE ConservationStatusLog (
