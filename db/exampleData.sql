@@ -159,3 +159,15 @@ INSERT INTO Species_Biome (genus_name, specific_name, biome_name) VALUES
 ('Quercus', 'robur', 'Desert')
 ON DUPLICATE KEY UPDATE biome_name = VALUES(biome_name);
 
+-- Insert Data into Species_Relationship 
+INSERT IGNORE INTO Species_Relationship (genus1_name, specific1_name, genus2_name, specific2_name, relationship_type) 
+VALUES 
+('Panthera', 'leo', 'Equus', 'ferus', 'Predation'), 
+('Panthera', 'tigris', 'Bos', 'taurus', 'Predation'), 
+('Apis', 'mellifera', 'Cucumis', 'sativus', 'Mutualism');
+
+-- Insert Data into ConservationStatusLog
+INSERT INTO ConservationStatusLog (genus_name, specific_name, old_status, new_status, change_date)
+VALUES
+('Panthera', 'tigris', 'Endangered', 'Vulnerable', '2024-01-01'),
+('Equus', 'ferus', 'Least Concern', 'Endangered', '2024-02-01');
