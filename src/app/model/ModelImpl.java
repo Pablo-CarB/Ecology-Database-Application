@@ -1,9 +1,7 @@
 package app.model;
 
-import java.lang.reflect.Type;
 import java.sql.DatabaseMetaData;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.*;
 
 import java.sql.Connection;
@@ -14,7 +12,7 @@ import java.sql.SQLException;
 
 
 import app.ConservationStatus;
-import app.Utils;
+import app.ControllerUtils;
 import javafx.util.Pair;
 
 public class ModelImpl{
@@ -262,9 +260,11 @@ public class ModelImpl{
       }
       else{
         String firstVar =  parentType.toLowerCase()+"_name";
-        String secondVar = Utils.descendHeirarchy.get(parentType).toLowerCase()+"_name";
+        System.out.println("parentType " + parentType);
+        System.out.println("test " + ControllerUtils.descendHierarchy.get(parentType).toLowerCase());
+        String secondVar = ControllerUtils.descendHierarchy.get(parentType).toLowerCase()+"_name";
 
-        query = "SELECT " + secondVar + " FROM `" + Utils.descendHeirarchy.get(parentType) + "` WHERE " + firstVar + " = ?";
+        query = "SELECT " + secondVar + " FROM `" + ControllerUtils.descendHierarchy.get(parentType) + "` WHERE " + firstVar + " = ?";
 
         stmt = this.connection.prepareStatement(query);
         stmt.setString(1, parentName);
@@ -327,13 +327,13 @@ public class ModelImpl{
           System.out.println("No species found for genus: " + genusName + " and specificName: " + specificName);
         }
       } catch (SQLException e) {
-        Utils.showErrorMessage("ERROR","Error executing the query: " + e.getMessage());
+        ControllerUtils.showErrorMessage("Error executing the query: " + e.getMessage());
         e.printStackTrace();
       }
 
     } catch (SQLException e) {
       // Outer SQLException (connection/statement issue)
-      Utils.showErrorMessage("ERROR","preparing the statement or connection issue:" + e.getMessage());
+      ControllerUtils.showErrorMessage("preparing the statement or connection issue:" + e.getMessage());
       e.printStackTrace();
     }
 

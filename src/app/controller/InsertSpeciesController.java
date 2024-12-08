@@ -3,15 +3,12 @@ package app.controller;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
+import app.ControllerUtils;
 import javafx.scene.Node;
 import javafx.stage.Stage;
 import app.ConservationStatus;
-import app.Utils;
 import app.model.ModelImpl;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -26,6 +23,11 @@ import javafx.scene.image.ImageView;
 import javafx.util.Pair;
 import javafx.util.converter.IntegerStringConverter;
 
+
+/**
+ * {@code InsertSpeciesController} is the controller class
+ * that handles the window responsible for species insertion
+ */
 public class InsertSpeciesController {
 
   @FXML
@@ -48,10 +50,18 @@ public class InsertSpeciesController {
   private TreeItem<String> genusNode;
   private ModelImpl model = ModelImpl.getInstance();
 
+  /**
+   * passes to the {@code InsertSpeciesController} the parent node of the species
+   * that is going to be inserted
+   * @param genusNode the parent/genus node
+   */
   public void setGenus(TreeItem<String> genusNode){
     this.genusNode = genusNode;
   }
 
+  /**
+   * method that initializes the insert species window and is run as soon as the fxml is loaded
+   */
   @FXML
   public void initialize() {
 
@@ -62,7 +72,7 @@ public class InsertSpeciesController {
             });
     yearDescribed.setTextFormatter(formatter);
 
-
+    String l = System.lineSeparator();
     Image image = new Image(getClass().getResourceAsStream("/app/images/homeIcon.png"));
     ImageView imageView = new ImageView(image);
 
@@ -77,11 +87,15 @@ public class InsertSpeciesController {
       dietaryPattern.getItems().addAll(model.queryTable("DietaryPattern"));
     }
     catch (Exception e){
-      Utils.showErrorMessage("ERROR",e.getMessage());
+      ControllerUtils.showErrorMessage(e.getMessage());
     }
 
   }
 
+  /**
+   * handles the logic for pressing the insert button
+   * @param event the
+   */
   @FXML
   public void handleInsertButton(ActionEvent event){
     String[] words = this.genusNode.getValue().split("\\s+");
@@ -107,10 +121,10 @@ public class InsertSpeciesController {
       stage.close();
 
     } catch (NumberFormatException e) {
-      Utils.showErrorMessage("ERROR","They year field must only contain numbers");
+      ControllerUtils.showErrorMessage("They year field must only contain numbers");
     }
     catch (SQLException e){
-      Utils.showErrorMessage("ERROR",e.getMessage());
+      ControllerUtils.showErrorMessage(e.getMessage());
     }
 
   }

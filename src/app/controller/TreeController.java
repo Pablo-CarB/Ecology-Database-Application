@@ -5,9 +5,8 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
-import app.Utils;
+import app.ControllerUtils;
 import app.model.ModelImpl;
 import app.model.Species;
 import javafx.fxml.FXML;
@@ -33,16 +32,13 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Pair;
 
+/**
+ * {@code TreeController} is the controller responsible for handling the tree view
+ */
 public class TreeController {
 
   @FXML
   private TreeView<String> treeOfLife;
-
-  private ModelImpl model = ModelImpl.getInstance();
-
-  private boolean deleteWarningShown = false;
-
-  private TreeItem<String> rootItem;
 
   // Table variables
   @FXML
@@ -64,6 +60,17 @@ public class TreeController {
   @FXML
   private TableColumn<Species, String> conservationStatusColumn;
 
+  // other variables
+  private final ModelImpl model = ModelImpl.getInstance();
+
+  private boolean deleteWarningShown = false;
+
+  private TreeItem<String> rootItem;
+
+
+  /**
+   * method that initializes the tree view window and is run as soon as the fxml is loaded
+   */
   public void initialize() {
     this.rootItem = new TreeItem<>("Database");
     treeOfLife.setRoot(rootItem);
@@ -104,19 +111,30 @@ public class TreeController {
 
   }
 
+  /**
+   * populates the tree with taxa from the database
+   * @param parentType the taxa of the parent node (ie clade,phylum etc)
+   * @param parentName the name of the parent taxa (ie homo,canis etc)
+   * @param node the current node in the tree
+   */
   private void populateTree(String parentType,String parentName,TreeItem<String> node) {
     List<String> subTaxa = model.querySubTaxa(parentType, parentName);
     System.out.println(parentType);
     System.out.println(Arrays.toString(subTaxa.toArray()));
     for (String subTaxon : subTaxa) {
       TreeItem<String> subTaxonItem = new TreeItem<>(subTaxon
-              + " (" + Utils.descendHeirarchy.get(parentType) + ")");
+              + " (" + ControllerUtils.descendHierarchy.get(parentType) + ")");
       node.getChildren().add(subTaxonItem);
 
-      populateTree(Utils.descendHeirarchy.get(parentType), subTaxon, subTaxonItem);
+      populateTree(ControllerUtils.descendHierarchy.get(parentType), subTaxon, subTaxonItem);
     }
   }
 
+  /**
+   * displays the species that is currently selected in the table
+   * @param selectedItem the currently selected node in the tree
+   * @param specificName the specific name of the currently selected node
+   */
   private void displaySpeciesDetails(TreeItem<String> selectedItem, String specificName) {
     // Parse the genus from the selected TreeItem
     String[] words = selectedItem.getParent().getValue().split("\\s+");
@@ -139,13 +157,15 @@ public class TreeController {
   }
 
 
-
-
-  // creates correct menu option given TreeItem
+  /**
+   * creates the correct right click options depending on the context of the click
+   * @param contextMenu the contextMenu where the options are presented to the user
+   * @param selected the selected tree node from which the options that are valid are decided
+   */
   private void menuSetter(ContextMenu contextMenu, TreeItem<String> selected) {
     String[] words = selected.getValue().split("\\s+");
     String taxa = words[words.length - 1].replaceAll("[()]", "");
-    String subTaxa = Utils.descendHeirarchy.get(taxa);
+    String subTaxa = ControllerUtils.descendHierarchy.get(taxa);
 
     MenuItem addSubTaxa = new MenuItem("Add " + subTaxa);
     addSubTaxa.setOnAction(e -> addSingleTaxaWindow(selected, "(" + subTaxa + ")", true));
@@ -154,8 +174,14 @@ public class TreeController {
 
   }
 
-  // creates window with functionality
-  private void addSingleTaxaWindow(TreeItem<String> selectedItem, String taxaType, boolean subTaxa) {
+  /**
+   * creates the window for
+   * @param selectedNode the currently
+   * @param rank the taxonomic rank of the newly inserted taxa
+   * @param subTaxa a boolean that indicates whether the new node to be inserted
+   *                will be inserted horizontally or as a sub-node
+   */
+  private void addSingleTaxaWindow(TreeItem<String> selectedNode, String rank, boolean subTaxa) {
     VBox addItemPane = new VBox(10);
     addItemPane.setStyle("-fx-padding: 10;");
 
@@ -177,15 +203,15 @@ public class TreeController {
 
     Stage addItemStage = new Stage();
     Scene addItemScene = new Scene(addItemPane, 300, 120);
-    addItemStage.setTitle("Add New " + taxaType.replaceAll("[()]", ""));
+    addItemStage.setTitle("Add New " + rank.replaceAll("[()]", ""));
     addItemStage.setScene(addItemScene);
 
     addButton.setOnAction(e -> {
-      addItem(nameField, selectedItem, taxaType, subTaxa, addItemStage);
+      addItem(nameField, selectedNode, rank, subTaxa, addItemStage);
     });
 
     nameField.setOnAction(e -> {
-      addItem(nameField, selectedItem, taxaType, subTaxa, addItemStage);
+      addItem(nameField, selectedNode, rank, subTaxa, addItemStage);
     });
 
     // Close the window when the TextField loses focus only if the button doesn't have focus
@@ -200,6 +226,14 @@ public class TreeController {
 
   }
 
+  /**
+   * handles the logic for
+   * @param nameField
+   * @param selectedItem
+   * @param taxaType
+   * @param subTaxa
+   * @param addItemStage
+   */
   private void addItem(TextField nameField, TreeItem<String> selectedItem, String taxaType,
                        boolean subTaxa, Stage addItemStage) {
     String newItemName = nameField.getText();
@@ -210,7 +244,10 @@ public class TreeController {
         String[] words = selectedItem.getValue().split("\\s+");
         List<Pair<Object, Integer>> list = new ArrayList<>();
         list.add(new Pair<>(newItemName, Types.VARCHAR));
-        list.add(new Pair<>(words[0], Types.VARCHAR));
+
+        if(selectedItem != rootItem){
+          list.add(new Pair<>(words[0], Types.VARCHAR));
+        }
 
         model.insertRow(table,list);
         selectedItem.getChildren().add(0, newItem);
@@ -232,11 +269,15 @@ public class TreeController {
       }
     }
     catch (Exception e){
-      Utils.showErrorMessage("ERROR",e.getMessage());
+      ControllerUtils.showErrorMessage(e.getMessage());
     }
     addItemStage.close();
   }
 
+  /**
+   * handles the logic for performing a right click on the tree view
+   * @param contextMenu the menu where the possible actions are presented to the user
+   */
   private void rightClickHandler(ContextMenu contextMenu) {
     treeOfLife.setOnContextMenuRequested(event -> {
       TreeItem<String> selectedItem = treeOfLife.getSelectionModel().getSelectedItem();
@@ -300,16 +341,20 @@ public class TreeController {
     });
   }
 
-  private void handleDeleteAction(TreeItem<String> selectedItem) {
+  /**
+   * handles the logic for deleting a node from the {@code treeOfLife}
+   * @param selectedNode the selected node
+   */
+  private void handleDeleteAction(TreeItem<String> selectedNode) {
     if (deleteWarningShown) {
-      if (selectedItem != rootItem) {
-        TreeItem<String> parent = selectedItem.getParent();
+      if (selectedNode != rootItem) {
+        TreeItem<String> parent = selectedNode.getParent();
         if (parent != null) {
-          parent.getChildren().remove(selectedItem);
+          parent.getChildren().remove(selectedNode);
         }
       }
     } else {
-      String[] words = selectedItem.getValue().split("\\s+");
+      String[] words = selectedNode.getValue().split("\\s+");
       String taxa = words[words.length - 1].replaceAll("[()]", "");
       Alert alert = new Alert(Alert.AlertType.WARNING, "Are you sure you want to delete this "
               + taxa + "?" + System.lineSeparator() + "This cannot be undone, and deletions also delete all sub taxa",
@@ -319,10 +364,10 @@ public class TreeController {
 
       ButtonType result = alert.showAndWait().orElse(ButtonType.NO);
       if (result == ButtonType.YES) {
-        if (selectedItem != rootItem) {
-          TreeItem<String> parent = selectedItem.getParent();
+        if (selectedNode != rootItem) {
+          TreeItem<String> parent = selectedNode.getParent();
           if (parent != null) {
-            parent.getChildren().remove(selectedItem);
+            parent.getChildren().remove(selectedNode);
           }
         }
 
@@ -331,6 +376,9 @@ public class TreeController {
     }
   }
 
+  /**
+   * handles the styling/color coding of the tree
+   */
   private void treeStyling() {
     treeOfLife.setCellFactory(param -> new TreeCell<String>() {
       @Override
@@ -364,14 +412,12 @@ public class TreeController {
   }
 
   private void openSpeciesPane(TreeItem<String> GenusNode) {
+
     try {
-      FXMLLoader loader = new FXMLLoader(getClass().getResource("AddSpeciesWindow.fxml"));
-
+      System.out.println(TreeController.class.getResource("lala"));
+      FXMLLoader loader = new FXMLLoader(TreeController.class.getResource("AddSpeciesWindow.fxml"));
       Pane speciesPane = loader.load();
-
       InsertSpeciesController controller = loader.getController();
-
-
       Stage speciesStage = new Stage();
       Scene speciesScene = new Scene(speciesPane);
       speciesStage.setScene(speciesScene);
@@ -380,8 +426,9 @@ public class TreeController {
       System.out.println(GenusNode.getValue());
       controller.setGenus(GenusNode);
     } catch (IOException e) {
-      Utils.showErrorMessage("ERROR",
-              "something went wrong with this apps internal files, attempt re downloading");
+      e.printStackTrace();  // Will give more detailed info about the error
+      ControllerUtils.showErrorMessage(e.getMessage());
+
     }
   }
 

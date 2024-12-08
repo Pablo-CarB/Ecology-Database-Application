@@ -5,6 +5,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * Main class for the GUI application
+ */
 public class Main extends Application {
   public static void main(String...args){
     launch();

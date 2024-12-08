@@ -1,6 +1,6 @@
 package app.controller;
 
-import app.Utils;
+import app.ControllerUtils;
 import app.model.ModelImpl;
 import javafx.fxml.FXML;
 import javafx.scene.control.PasswordField;
@@ -9,6 +9,10 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
+
+/**
+ * is {@code LoginController} the controller for the login window that the user sees on startup
+ */
 public class LoginController {
 
   @FXML
@@ -23,9 +27,12 @@ public class LoginController {
   @FXML
   private ToggleButton hidePassword;
 
-  private ModelImpl model = ModelImpl.getInstance();
+  private final ModelImpl model = ModelImpl.getInstance();
 
-  // Handle login button click (or Enter press)
+
+  /**
+   * handles the logic for pressing the login button
+   */
   @FXML
   private void handleLoginAction() {
     String username = usernameField.getText();
@@ -33,20 +40,29 @@ public class LoginController {
     try{
       model.establishConnection(username,password);
       Stage currentStage = (Stage) usernameField.getScene().getWindow();
-      Utils.switchScene(currentStage,"Tree.fxml","Tree View");
+      ControllerUtils.switchScene(currentStage,"Tree.fxml","Tree View");
     }
     catch (Exception e){
       e.printStackTrace();
-      Utils.showErrorMessage("ERROR",e.getMessage());
+      ControllerUtils.showErrorMessage(e.getMessage());
     }
 
   }
+
+  /**
+   * handles the logic for pressing any keys on the login window
+   * @param event the key that was pressed
+   */
   @FXML
   private void handleKeyPress(KeyEvent event) {
     if (event.getCode().toString().equals("ENTER")) {
       handleLoginAction();
     }
   }
+
+  /**
+   * handles the logic for hiding/displaying the password text field
+   */
   @FXML
   private void handleTogglePasswordVisibility() {
     if (hidePassword.isSelected()) {

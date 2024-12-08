@@ -37,7 +37,7 @@ public class Species {
     return genusName;
   }
 
-  public StringProperty speciesProperty() {
+  public StringProperty specificNameProperty() {
     return specificName;
   }
 
