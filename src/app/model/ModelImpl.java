@@ -13,6 +13,7 @@ import java.sql.SQLException;
 
 import app.ConservationStatus;
 import app.ControllerUtils;
+import app.TreeRank;
 import javafx.util.Pair;
 
 public class ModelImpl{
@@ -242,29 +243,27 @@ public class ModelImpl{
     PreparedStatement idStmt = connection.prepareStatement(insertQuery);
     idStmt.executeUpdate();
   }
-  public List<String> querySubTaxa(String parentType, String parentName) {
+  public List<String> querySubTaxa(TreeRank parentType, String parentName) {
     List<String> subTaxa = new ArrayList<>();
     String query = "";
 
     PreparedStatement stmt = null;
 
     try{
-      if(parentType.equals("Database")){
+      if(parentType == TreeRank.Root){
         query = "SELECT * FROM Domain;";
         stmt = this.connection.prepareStatement(query);
       }
-      else if(parentType.equals("Genus")) {
+      else if(parentType == TreeRank.Genus) {
         query = "SELECT * FROM Species WHERE genus_name = ?";
         stmt = this.connection.prepareStatement(query);
         stmt.setString(1, parentName);
       }
       else{
-        String firstVar =  parentType.toLowerCase()+"_name";
-        System.out.println("parentType " + parentType);
-        System.out.println("test " + ControllerUtils.descendHierarchy.get(parentType).toLowerCase());
-        String secondVar = ControllerUtils.descendHierarchy.get(parentType).toLowerCase()+"_name";
+        String firstVar =  parentType.getTitle().toLowerCase()+"_name";
+        String secondVar = Objects.requireNonNull(parentType.descendHeirarchy()).getTitle().toLowerCase()+"_name";
 
-        query = "SELECT " + secondVar + " FROM `" + ControllerUtils.descendHierarchy.get(parentType) + "` WHERE " + firstVar + " = ?";
+        query = "SELECT " + secondVar + " FROM `" + parentType.descendHeirarchy() + "` WHERE " + firstVar + " = ?";
 
         stmt = this.connection.prepareStatement(query);
         stmt.setString(1, parentName);

@@ -1,11 +1,14 @@
 package app.controller;
 
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import app.ControllerUtils;
+import app.TreeRank;
 import javafx.scene.Node;
 import javafx.stage.Stage;
 import app.ConservationStatus;
@@ -47,15 +50,15 @@ public class InsertSpeciesController {
   @FXML
   private TextField yearDescribed;
 
-  private TreeItem<String> genusNode;
-  private ModelImpl model = ModelImpl.getInstance();
+  private TreeItem<Pair<String,TreeRank>> genusNode;
+  private final ModelImpl model = ModelImpl.getInstance();
 
   /**
    * passes to the {@code InsertSpeciesController} the parent node of the species
    * that is going to be inserted
    * @param genusNode the parent/genus node
    */
-  public void setGenus(TreeItem<String> genusNode){
+  public void setGenus(TreeItem<Pair<String, TreeRank>> genusNode){
     this.genusNode = genusNode;
   }
 
@@ -72,8 +75,9 @@ public class InsertSpeciesController {
             });
     yearDescribed.setTextFormatter(formatter);
 
-    String l = System.lineSeparator();
-    Image image = new Image(getClass().getResourceAsStream("/app/images/homeIcon.png"));
+    Image image = new Image(Objects.requireNonNull(getClass().getResourceAsStream(
+            Paths.get("app", "images", "homeIcon.png").toString()
+    )));
     ImageView imageView = new ImageView(image);
 
     imageView.setFitWidth(20);
@@ -85,6 +89,9 @@ public class InsertSpeciesController {
       feedingStrategy.getItems().addAll(model.queryTable("FeedingStrategy"));
 
       dietaryPattern.getItems().addAll(model.queryTable("DietaryPattern"));
+    }
+    catch (NullPointerException n){
+      ControllerUtils.showErrorMessage("internal file paths are incorrectly configured, attempt re-download app");
     }
     catch (Exception e){
       ControllerUtils.showErrorMessage(e.getMessage());
@@ -98,15 +105,15 @@ public class InsertSpeciesController {
    */
   @FXML
   public void handleInsertButton(ActionEvent event){
-    String[] words = this.genusNode.getValue().split("\\s+");
-
+    String genusName = this.genusNode.getValue().getKey();
     String yearText = this.yearDescribed.getText();
+
     try {
       int yearNum = Integer.parseInt(yearText);
 
       List<Pair<Object, Integer>> pairs = new ArrayList<>();
 
-          pairs.add(new Pair<>(words[0], Types.VARCHAR));
+          pairs.add(new Pair<>(genusName, Types.VARCHAR));
           pairs.add(new Pair<>(this.specificName.getText(), Types.VARCHAR));
           pairs.add(new Pair<>(this.conservationStatus.getValue(), Types.VARCHAR));
           pairs.add(new Pair<>(this.yearDescribed.getText(), Types.INTEGER));
